@@ -1,16 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Lightbulb, CheckCircle, Search, Clock, TrendingUp, TrendingDown } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { ideasApi } from "@/lib/api";
+import { useIdeas } from "@/lib/api";
 
 export function QuickStats() {
-  const { data: ideas = [] } = useQuery({
-    queryKey: ["/api/ideas"],
-  });
+  const { data: ideas = [] } = useIdeas();
 
   const totalIdeas = ideas.length;
-  const validatedIdeas = ideas.filter((idea: any) => idea.status === "Validated").length;
-  const inDiscovery = ideas.filter((idea: any) => idea.status === "In Discovery").length;
+  const validatedIdeas = ideas.filter((idea) => idea.status === "Validated").length;
+  const inDiscovery = ideas.filter((idea) => idea.status === "In Discovery").length;
   const validationRate = totalIdeas > 0 ? Math.round((validatedIdeas / totalIdeas) * 100) : 0;
 
   const stats = [

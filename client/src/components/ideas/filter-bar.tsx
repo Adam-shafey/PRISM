@@ -7,8 +7,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Grid3X3, List, Axis3d } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { categoriesApi, usersApi } from "@/lib/api";
+import { useCategories, useUsers } from "@/lib/api";
 import type { IdeaFilters } from "@/types";
 
 interface FilterBarProps {
@@ -19,13 +18,8 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ filters, onFiltersChange, view, onViewChange }: FilterBarProps) {
-  const { data: categories = [] } = useQuery({
-    queryKey: ["/api/categories"],
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-  });
+  const { data: categories = [] } = useCategories();
+  const { data: users = [] } = useUsers();
 
   const updateFilter = (key: keyof IdeaFilters, value: any) => {
     onFiltersChange({
@@ -67,7 +61,7 @@ export function FilterBar({ filters, onFiltersChange, view, onViewChange }: Filt
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category: any) => (
+              {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id.toString()}>
                   {category.name}
                 </SelectItem>
@@ -87,7 +81,7 @@ export function FilterBar({ filters, onFiltersChange, view, onViewChange }: Filt
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Owners</SelectItem>
-              {users.map((user: any) => (
+              {users.map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
                   {user.name}
                 </SelectItem>

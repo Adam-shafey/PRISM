@@ -9,8 +9,7 @@ import {
   Settings,
   Zap
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { ideasApi } from "@/lib/api";
+import { useIdeas } from "@/lib/api";
 
 const navigationItems = [
   {
@@ -58,11 +57,9 @@ const navigationItems = [
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { data: ideas = [] } = useQuery({
-    queryKey: ["/api/ideas"],
-  });
+  const { data: ideas = [] } = useIdeas();
 
-  const activeIdeasCount = ideas.filter((idea: any) => 
+  const activeIdeasCount = ideas.filter((idea) => 
     idea.status === "New" || idea.status === "In Discovery"
   ).length;
 

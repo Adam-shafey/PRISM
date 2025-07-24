@@ -1,36 +1,20 @@
 import { useParams, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ArrowLeft, Edit, MessageSquare, FlaskConical, FileText } from "lucide-react";
-import { ideasApi, hypothesesApi, insightsApi, commentsApi } from "@/lib/api";
+import { useIdea, useHypotheses, useInsights, useComments } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 
 export default function IdeaDetail() {
   const { id } = useParams();
   const ideaId = parseInt(id as string);
 
-  const { data: idea, isLoading: ideaLoading } = useQuery({
-    queryKey: ["/api/ideas", ideaId],
-    queryFn: () => ideasApi.getById(ideaId),
-  });
-
-  const { data: hypotheses = [] } = useQuery({
-    queryKey: ["/api/ideas", ideaId, "hypotheses"],
-    queryFn: () => hypothesesApi.getByIdeaId(ideaId),
-  });
-
-  const { data: insights = [] } = useQuery({
-    queryKey: ["/api/ideas", ideaId, "insights"],
-    queryFn: () => insightsApi.getByIdeaId(ideaId),
-  });
-
-  const { data: comments = [] } = useQuery({
-    queryKey: ["/api/ideas", ideaId, "comments"],
-    queryFn: () => commentsApi.getByIdeaId(ideaId),
-  });
+  const { data: idea, isLoading: ideaLoading } = useIdea(ideaId);
+  const { data: hypotheses = [] } = useHypotheses(ideaId);
+  const { data: insights = [] } = useInsights(ideaId);
+  const { data: comments = [] } = useComments(ideaId);
 
   if (ideaLoading) {
     return (
@@ -206,14 +190,14 @@ export default function IdeaDetail() {
                   <div>
                     <label className="text-sm font-medium">Created</label>
                     <p className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
+                      {idea.createdAt ? formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true }) : 'Unknown'}
                     </p>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium">Last Updated</label>
                     <p className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(idea.updatedAt), { addSuffix: true })}
+                      {idea.updatedAt ? formatDistanceToNow(new Date(idea.updatedAt), { addSuffix: true }) : 'Unknown'}
                     </p>
                   </div>
 

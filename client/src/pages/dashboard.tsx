@@ -1,12 +1,11 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { FilterBar } from "@/components/ideas/filter-bar";
 import { IdeaGrid } from "@/components/ideas/idea-grid";
 import { QuickStats } from "@/components/stats/quick-stats";
 import { NewIdeaModal } from "@/components/ideas/new-idea-modal";
-import { ideasApi } from "@/lib/api";
+import { useIdeas } from "@/lib/api";
 import type { IdeaFilters } from "@/types";
 
 export default function Dashboard() {
@@ -14,12 +13,10 @@ export default function Dashboard() {
   const [filters, setFilters] = useState<IdeaFilters>({});
   const [view, setView] = useState<"grid" | "list" | "matrix">("grid");
 
-  const { data: ideas = [], isLoading } = useQuery({
-    queryKey: ["/api/ideas"],
-  });
+  const { data: ideas = [], isLoading } = useIdeas();
 
   const filteredIdeas = useMemo(() => {
-    return ideas.filter((idea: any) => {
+    return ideas.filter((idea) => {
       if (filters.status && idea.status !== filters.status) return false;
       if (filters.categoryId && idea.categoryId !== filters.categoryId) return false;
       if (filters.ownerId && idea.ownerId !== filters.ownerId) return false;

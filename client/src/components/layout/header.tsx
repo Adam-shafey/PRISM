@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
-import { useQuery } from "@tanstack/react-query";
-import { ideasApi } from "@/lib/api";
+import { useIdeas } from "@/lib/api";
 import { useState } from "react";
 
 interface HeaderProps {
@@ -15,15 +14,13 @@ export function Header({ onNewIdea }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: ideas = [] } = useQuery({
-    queryKey: ["/api/ideas"],
-  });
+  const { data: ideas = [] } = useIdeas();
 
-  const activeCount = ideas.filter((idea: any) => 
+  const activeCount = ideas.filter(idea => 
     idea.status === "New" || idea.status === "In Discovery"
   ).length;
 
-  const validatedCount = ideas.filter((idea: any) => 
+  const validatedCount = ideas.filter(idea => 
     idea.status === "Validated"
   ).length;
 

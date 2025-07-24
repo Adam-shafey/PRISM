@@ -1,61 +1,160 @@
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "./queryClient";
-import type { InsertIdea, InsertHypothesis, InsertInsight, InsertComment, InsertCategory } from "@shared/schema";
-import type { AIResponse } from "@/types";
+import type { 
+  Idea, 
+  InsertIdea, 
+  Category, 
+  User, 
+  Hypothesis, 
+  InsertHypothesis,
+  Insight,
+  InsertInsight,
+  Comment,
+  InsertComment
+} from "@shared/schema";
 
 // Ideas API
-export const ideasApi = {
-  getAll: () => fetch("/api/ideas").then(res => res.json()),
-  getById: (id: number) => fetch(`/api/ideas/${id}`).then(res => res.json()),
-  create: (data: InsertIdea) => apiRequest("POST", "/api/ideas", data),
-  update: (id: number, data: Partial<InsertIdea>) => apiRequest("PUT", `/api/ideas/${id}`, data),
-  delete: (id: number) => apiRequest("DELETE", `/api/ideas/${id}`),
-};
+export function useIdeas() {
+  return useQuery<(Idea & { category?: Category; owner?: User; hypothesesCount: number; commentsCount: number })[]>({
+    queryKey: ["/api/ideas"],
+  });
+}
 
-// Hypotheses API
-export const hypothesesApi = {
-  getByIdeaId: (ideaId: number) => fetch(`/api/ideas/${ideaId}/hypotheses`).then(res => res.json()),
-  create: (ideaId: number, data: Omit<InsertHypothesis, 'ideaId'>) => 
-    apiRequest("POST", `/api/ideas/${ideaId}/hypotheses`, data),
-  update: (id: number, data: Partial<InsertHypothesis>) => 
-    apiRequest("PUT", `/api/hypotheses/${id}`, data),
-};
+export function useIdea(id: number) {
+  return useQuery<Idea & { category?: Category; owner?: User }>({
+    queryKey: ["/api/ideas", id],
+    enabled: !!id,
+  });
+}
 
-// Insights API
-export const insightsApi = {
-  getByIdeaId: (ideaId: number) => fetch(`/api/ideas/${ideaId}/insights`).then(res => res.json()),
-  create: (ideaId: number, data: Omit<InsertInsight, 'ideaId'>) => 
-    apiRequest("POST", `/api/ideas/${ideaId}/insights`, data),
-  delete: (id: number) => apiRequest("DELETE", `/api/insights/${id}`),
-};
+export function useCreateIdea() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: InsertIdea) => {
+      const response = await apiRequest("POST", "/api/ideas", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
+    },
+  });
+}
 
-// Comments API
-export const commentsApi = {
-  getByIdeaId: (ideaId: number) => fetch(`/api/ideas/${ideaId}/comments`).then(res => res.json()),
-  create: (ideaId: number, data: Omit<InsertComment, 'ideaId'>) => 
-    apiRequest("POST", `/api/ideas/${ideaId}/comments`, data),
-  update: (id: number, data: Partial<InsertComment>) => 
-    apiRequest("PUT", `/api/comments/${id}`, data),
-  delete: (id: number) => apiRequest("DELETE", `/api/comments/${id}`),
-};
+export function useUpdateIdea() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertIdea> }) => {
+      const response = await apiRequest("PUT", `/api/ideas/${id}`, data);
+      return response.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas", id] });
+    },
+  });
+}
+
+export function useDeleteIdea() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/ideas/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
+    },
+  });
+}
 
 // Categories API
-export const categoriesApi = {
-  getAll: () => fetch("/api/categories").then(res => res.json()),
-  create: (data: InsertCategory) => apiRequest("POST", "/api/categories", data),
-};
+export function useCategories() {
+  return useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+}
 
 // Users API
-export const usersApi = {
-  getAll: () => fetch("/api/users").then(res => res.json()),
-};
+export function useUsers() {
+  return useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+}
 
-// Activities API
-export const activitiesApi = {
-  getByIdeaId: (ideaId: number) => fetch(`/api/ideas/${ideaId}/activities`).then(res => res.json()),
-};
+// Hypotheses API
+export function useHypotheses(ideaId: number) {
+  return useQuery<Hypothesis[]>({
+    queryKey: ["/api/ideas", ideaId, "hypotheses"],
+    enabled: !!ideaId,
+  });
+}
+
+export function useCreateHypothesis() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ ideaId, data }: { ideaId: number; data: Omit<InsertHypothesis, 'ideaId'> }) => {
+      const response = await apiRequest("POST", `/api/ideas/${ideaId}/hypotheses`, data);
+      return response.json();
+    },
+    onSuccess: (_, { ideaId }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas", ideaId, "hypotheses"] });
+    },
+  });
+}
+
+// Insights API
+export function useInsights(ideaId: number) {
+  return useQuery<(Insight & { createdByUser?: User })[]>({
+    queryKey: ["/api/ideas", ideaId, "insights"],
+    enabled: !!ideaId,
+  });
+}
+
+export function useCreateInsight() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ ideaId, data }: { ideaId: number; data: Omit<InsertInsight, 'ideaId' | 'createdBy'> }) => {
+      const response = await apiRequest("POST", `/api/ideas/${ideaId}/insights`, data);
+      return response.json();
+    },
+    onSuccess: (_, { ideaId }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas", ideaId, "insights"] });
+    },
+  });
+}
+
+// Comments API
+export function useComments(ideaId: number) {
+  return useQuery<(Comment & { user?: User })[]>({
+    queryKey: ["/api/ideas", ideaId, "comments"],
+    enabled: !!ideaId,
+  });
+}
+
+export function useCreateComment() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ ideaId, data }: { ideaId: number; data: Omit<InsertComment, 'ideaId' | 'userId'> }) => {
+      const response = await apiRequest("POST", `/api/ideas/${ideaId}/comments`, data);
+      return response.json();
+    },
+    onSuccess: (_, { ideaId }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas", ideaId, "comments"] });
+    },
+  });
+}
 
 // AI API
-export const aiApi = {
-  processDiscoveryData: (data: { description: string; title: string }): Promise<AIResponse> =>
-    apiRequest("POST", "/api/ai/process-discovery-data", data).then(res => res.json()),
-};
+export function useAISuggestions() {
+  return useMutation({
+    mutationFn: async (data: { title: string; description: string }) => {
+      const response = await apiRequest("POST", "/api/ai/process-discovery-data", data);
+      return response.json();
+    },
+  });
+}

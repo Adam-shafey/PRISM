@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { insertIdeaSchema } from "@shared/schema";
-import { ideasApi, categoriesApi, usersApi, aiApi } from "@/lib/api";
+import { useCreateIdea, useCategories, useUsers, useAISuggestions } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -32,17 +32,14 @@ interface NewIdeaModalProps {
 
 export function NewIdeaModal({ open, onOpenChange }: NewIdeaModalProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [aiSuggestions, setAiSuggestions] = useState<any>(null);
   const [loadingAI, setLoadingAI] = useState(false);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ["/api/categories"],
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-  });
+  const { data: categories = [] } = useCategories();
+  const { data: users = [] } = useUsers();
+  
+  const createIdeaMutation = useCreateIdea();
+  const aiMutation = useAISuggestions();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -54,23 +51,7 @@ export function NewIdeaModal({ open, onOpenChange }: NewIdeaModalProps) {
     },
   });
 
-  const createIdeaMutation = useMutation({
-    mutationFn: (data: any) => ideasApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
-      toast({ title: "Success", description: "Idea created successfully!" });
-      onOpenChange(false);
-      form.reset();
-      setAiSuggestions(null);
-    },
-    onError: () => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to create idea. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const onSubmit = (data: FormData) => {
     const { tags, ...ideaData } = data;
@@ -81,7 +62,21 @@ export function NewIdeaModal({ open, onOpenChange }: NewIdeaModalProps) {
       ownerId: data.ownerId ? parseInt(data.ownerId.toString()) : undefined,
     };
 
-    createIdeaMutation.mutate(processedData);
+    createIdeaMutation.mutate(processedData, {
+      onSuccess: () => {
+        toast({ title: "Success", description: "Idea created successfully!" });
+        onOpenChange(false);
+        form.reset();
+        setAiSuggestions(null);
+      },
+      onError: () => {
+        toast({ 
+          title: "Error", 
+          description: "Failed to create idea. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const generateAISuggestions = async () => {
@@ -99,7 +94,7 @@ export function NewIdeaModal({ open, onOpenChange }: NewIdeaModalProps) {
 
     setLoadingAI(true);
     try {
-      const response = await aiApi.processDiscoveryData({ title, description });
+      const response = await aiMutation.mutateAsync({ title, description });
       setAiSuggestions(response);
       
       // Auto-apply suggestions
@@ -107,7 +102,7 @@ export function NewIdeaModal({ open, onOpenChange }: NewIdeaModalProps) {
         form.setValue("tags", response.tags.join(", "));
       }
       
-      const suggestedCategory = categories.find((cat: any) => cat.name === response.category);
+      const suggestedCategory = categories.find((cat) => cat.name === response.category);
       if (suggestedCategory) {
         form.setValue("categoryId", suggestedCategory.id);
       }

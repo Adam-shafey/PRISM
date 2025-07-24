@@ -3,10 +3,44 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertIdeaSchema, insertHypothesisSchema, insertInsightSchema, insertCommentSchema, insertCategorySchema } from "@shared/schema";
+import { requireAuth, getCurrentUser } from "./auth";
+import passport from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication endpoints
+  app.post("/api/auth/login", passport.authenticate('local'), (req, res) => {
+    res.json({ user: req.user, message: "Logged in successfully" });
+  });
+
+  app.post("/api/auth/logout", (req, res, next) => {
+    req.logout((err: any) => {
+      if (err) return next(err);
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({ user: req.user });
+    } else {
+      // Auto-login first user for development
+      storage.getAllUsers().then(users => {
+        if (users.length > 0) {
+          req.login(users[0], (err: any) => {
+            if (err) return res.status(401).json({ user: null });
+            return res.json({ user: req.user });
+          });
+        } else {
+          res.status(401).json({ user: null });
+        }
+      }).catch(() => {
+        res.status(401).json({ user: null });
+      });
+    }
+  });
+
   // Ideas endpoints
-  app.get("/api/ideas", async (req, res) => {
+  app.get("/api/ideas", requireAuth, async (req, res) => {
     try {
       const ideas = await storage.getAllIdeas();
       res.json(ideas);
@@ -33,10 +67,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ideas", async (req, res) => {
+  app.post("/api/ideas", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertIdeaSchema.parse(req.body);
+      const currentUser = getCurrentUser(req);
+      const validatedData = insertIdeaSchema.parse({
+        ...req.body,
+        ownerId: currentUser?.id
+      });
       const idea = await storage.createIdea(validatedData);
+      
+      // Create activity record
+      if (currentUser) {
+        await storage.createActivity({
+          ideaId: idea.id,
+          userId: currentUser.id,
+          action: "created",
+          details: { title: idea.title }
+        });
+      }
+      
       res.status(201).json(idea);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -158,15 +207,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ideas/:ideaId/insights", async (req, res) => {
+  app.post("/api/ideas/:ideaId/insights", requireAuth, async (req, res) => {
     try {
       const ideaId = parseInt(req.params.ideaId);
       if (isNaN(ideaId)) {
         return res.status(400).json({ message: "Invalid idea ID" });
       }
 
-      const validatedData = insertInsightSchema.parse({ ...req.body, ideaId });
+      const currentUser = getCurrentUser(req);
+      const validatedData = insertInsightSchema.parse({ 
+        ...req.body, 
+        ideaId,
+        createdBy: currentUser?.id
+      });
       const insight = await storage.createInsight(validatedData);
+      
+      // Create activity record
+      if (currentUser) {
+        await storage.createActivity({
+          ideaId,
+          userId: currentUser.id,
+          action: "insight_added",
+          details: { title: insight.title, type: insight.type }
+        });
+      }
+      
       res.status(201).json(insight);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -191,15 +256,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ideas/:ideaId/comments", async (req, res) => {
+  app.post("/api/ideas/:ideaId/comments", requireAuth, async (req, res) => {
     try {
       const ideaId = parseInt(req.params.ideaId);
       if (isNaN(ideaId)) {
         return res.status(400).json({ message: "Invalid idea ID" });
       }
 
-      const validatedData = insertCommentSchema.parse({ ...req.body, ideaId });
+      const currentUser = getCurrentUser(req);
+      const validatedData = insertCommentSchema.parse({ 
+        ...req.body, 
+        ideaId,
+        userId: currentUser?.id
+      });
       const comment = await storage.createComment(validatedData);
+      
+      // Create activity record
+      if (currentUser) {
+        await storage.createActivity({
+          ideaId,
+          userId: currentUser.id,
+          action: "commented",
+          details: { content: req.body.content }
+        });
+      }
+      
       res.status(201).json(comment);
     } catch (error) {
       if (error instanceof z.ZodError) {
