@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import IdeaDetail from "@/pages/idea-detail";
 import Prioritization from "@/pages/prioritization";
 import Validation from "@/pages/validation";
+import Insights from "@/pages/insights";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/ideas/:id" component={IdeaDetail} />
       <Route path="/prioritization" component={Prioritization} />
       <Route path="/validation" component={Validation} />
+      <Route path="/insights" component={Insights} />
       <Route component={NotFound} />
     </Switch>
   );

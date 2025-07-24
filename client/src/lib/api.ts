@@ -144,9 +144,32 @@ export function useCreateInsight() {
     },
     onSuccess: (_, { ideaId }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/ideas", ideaId, "insights"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
     },
   });
 }
+
+export function useDeleteInsight() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/insights/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
+      // Invalidate all insight queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key.includes("insights");
+        }
+      });
+    },
+  });
+}
+
+
 
 // Comments API
 export function useComments(ideaId: number) {
