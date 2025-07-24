@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from "@/pages/dashboard";
 import IdeaDetail from "@/pages/idea-detail";
 import Prioritization from "@/pages/prioritization";
+import Validation from "@/pages/validation";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/ideas/:id" component={IdeaDetail} />
       <Route path="/prioritization" component={Prioritization} />
+      <Route path="/validation" component={Validation} />
       <Route component={NotFound} />
     </Switch>
   );

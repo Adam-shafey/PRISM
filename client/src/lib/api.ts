@@ -105,6 +105,27 @@ export function useCreateHypothesis() {
   });
 }
 
+export function useUpdateHypothesis() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertHypothesis> }) => {
+      const response = await apiRequest("PUT", `/api/hypotheses/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/ideas"] });
+      // Invalidate all hypothesis queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key.includes("hypotheses");
+        }
+      });
+    },
+  });
+}
+
 // Insights API
 export function useInsights(ideaId: number) {
   return useQuery<(Insight & { createdByUser?: User })[]>({
