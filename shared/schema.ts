@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -139,3 +140,70 @@ export type InsertComment = z.infer<typeof insertCommentSchema>;
 
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  ideas: many(ideas),
+  insights: many(insights),
+  comments: many(comments),
+  activities: many(activities),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  ideas: many(ideas),
+}));
+
+export const ideasRelations = relations(ideas, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [ideas.categoryId],
+    references: [categories.id],
+  }),
+  owner: one(users, {
+    fields: [ideas.ownerId],
+    references: [users.id],
+  }),
+  hypotheses: many(hypotheses),
+  insights: many(insights),
+  comments: many(comments),
+  activities: many(activities),
+}));
+
+export const hypothesesRelations = relations(hypotheses, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [hypotheses.ideaId],
+    references: [ideas.id],
+  }),
+}));
+
+export const insightsRelations = relations(insights, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [insights.ideaId],
+    references: [ideas.id],
+  }),
+  createdByUser: one(users, {
+    fields: [insights.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [comments.ideaId],
+    references: [ideas.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  idea: one(ideas, {
+    fields: [activities.ideaId],
+    references: [ideas.id],
+  }),
+  user: one(users, {
+    fields: [activities.userId],
+    references: [users.id],
+  }),
+}));

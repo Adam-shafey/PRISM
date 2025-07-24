@@ -5,6 +5,8 @@ import {
   type Insight, type InsertInsight, type Comment, type InsertComment,
   type Activity, type InsertActivity
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -47,302 +49,252 @@ export interface IStorage {
   createActivity(activity: InsertActivity): Promise<Activity>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private ideas: Map<number, Idea>;
-  private categories: Map<number, Category>;
-  private hypotheses: Map<number, Hypothesis>;
-  private insights: Map<number, Insight>;
-  private comments: Map<number, Comment>;
-  private activities: Map<number, Activity>;
-  
-  private currentUserId: number;
-  private currentIdeaId: number;
-  private currentCategoryId: number;
-  private currentHypothesisId: number;
-  private currentInsightId: number;
-  private currentCommentId: number;
-  private currentActivityId: number;
+// Database Storage replaces MemStorage for PostgreSQL database integration
 
-  constructor() {
-    this.users = new Map();
-    this.ideas = new Map();
-    this.categories = new Map();
-    this.hypotheses = new Map();
-    this.insights = new Map();
-    this.comments = new Map();
-    this.activities = new Map();
-    
-    this.currentUserId = 1;
-    this.currentIdeaId = 1;
-    this.currentCategoryId = 1;
-    this.currentHypothesisId = 1;
-    this.currentInsightId = 1;
-    this.currentCommentId = 1;
-    this.currentActivityId = 1;
-
-    this.seedData();
-  }
-
-  private seedData() {
-    // Seed users
-    const user1: User = {
-      id: this.currentUserId++,
-      username: "sarah.chen",
-      email: "sarah.chen@company.com",
-      name: "Sarah Chen",
-      role: "Product Manager",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40",
-      createdAt: new Date(),
-    };
-
-    const user2: User = {
-      id: this.currentUserId++,
-      username: "mike.johnson",
-      email: "mike.johnson@company.com",
-      name: "Mike Johnson",
-      role: "Data Scientist",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40",
-      createdAt: new Date(),
-    };
-
-    const user3: User = {
-      id: this.currentUserId++,
-      username: "emily.davis",
-      email: "emily.davis@company.com",
-      name: "Emily Davis",
-      role: "UX Designer",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b192?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40",
-      createdAt: new Date(),
-    };
-
-    this.users.set(user1.id, user1);
-    this.users.set(user2.id, user2);
-    this.users.set(user3.id, user3);
-
-    // Seed categories
-    const categories = [
-      { name: "Growth", color: "purple", description: "User acquisition and growth initiatives" },
-      { name: "Retention", color: "orange", description: "User retention and engagement features" },
-      { name: "UX Improvement", color: "red", description: "User experience enhancements" },
-      { name: "New Market", color: "blue", description: "New market opportunities and expansion" },
-    ];
-
-    categories.forEach(cat => {
-      const category: Category = {
-        id: this.currentCategoryId++,
-        ...cat,
-      };
-      this.categories.set(category.id, category);
-    });
-  }
-
+export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        role: insertUser.role || "Product Manager"
+      })
+      .returning();
     return user;
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users);
   }
 
   // Categories
   async getAllCategories(): Promise<Category[]> {
-    return Array.from(this.categories.values());
+    return await db.select().from(categories);
   }
 
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const id = this.currentCategoryId++;
-    const category: Category = { ...insertCategory, id };
-    this.categories.set(id, category);
+    const [category] = await db
+      .insert(categories)
+      .values({
+        ...insertCategory,
+        description: insertCategory.description || null
+      })
+      .returning();
     return category;
   }
 
   async getCategoryById(id: number): Promise<Category | undefined> {
-    return this.categories.get(id);
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category || undefined;
   }
 
   // Ideas
   async getAllIdeas(): Promise<(Idea & { category?: Category; owner?: User; hypothesesCount: number; commentsCount: number })[]> {
-    const ideas = Array.from(this.ideas.values());
-    return ideas.map(idea => ({
-      ...idea,
-      category: idea.categoryId ? this.categories.get(idea.categoryId) : undefined,
-      owner: idea.ownerId ? this.users.get(idea.ownerId) : undefined,
-      hypothesesCount: Array.from(this.hypotheses.values()).filter(h => h.ideaId === idea.id).length,
-      commentsCount: Array.from(this.comments.values()).filter(c => c.ideaId === idea.id).length,
+    const result = await db
+      .select({
+        idea: ideas,
+        category: categories,
+        owner: users,
+        hypothesesCount: sql<number>`cast(count(distinct ${hypotheses.id}) as int)`,
+        commentsCount: sql<number>`cast(count(distinct ${comments.id}) as int)`,
+      })
+      .from(ideas)
+      .leftJoin(categories, eq(ideas.categoryId, categories.id))
+      .leftJoin(users, eq(ideas.ownerId, users.id))
+      .leftJoin(hypotheses, eq(ideas.id, hypotheses.ideaId))
+      .leftJoin(comments, eq(ideas.id, comments.ideaId))
+      .groupBy(ideas.id, categories.id, users.id);
+
+    return result.map(row => ({
+      ...row.idea,
+      category: row.category || undefined,
+      owner: row.owner || undefined,
+      hypothesesCount: row.hypothesesCount || 0,
+      commentsCount: row.commentsCount || 0,
     }));
   }
 
   async getIdeaById(id: number): Promise<(Idea & { category?: Category; owner?: User }) | undefined> {
-    const idea = this.ideas.get(id);
-    if (!idea) return undefined;
+    const result = await db
+      .select({
+        idea: ideas,
+        category: categories,
+        owner: users,
+      })
+      .from(ideas)
+      .leftJoin(categories, eq(ideas.categoryId, categories.id))
+      .leftJoin(users, eq(ideas.ownerId, users.id))
+      .where(eq(ideas.id, id));
 
+    if (result.length === 0) return undefined;
+
+    const row = result[0];
     return {
-      ...idea,
-      category: idea.categoryId ? this.categories.get(idea.categoryId) : undefined,
-      owner: idea.ownerId ? this.users.get(idea.ownerId) : undefined,
+      ...row.idea,
+      category: row.category || undefined,
+      owner: row.owner || undefined,
     };
   }
 
   async createIdea(insertIdea: InsertIdea): Promise<Idea> {
-    const id = this.currentIdeaId++;
-    const now = new Date();
-    const idea: Idea = { 
-      ...insertIdea, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.ideas.set(id, idea);
+    const [idea] = await db
+      .insert(ideas)
+      .values({
+        ...insertIdea,
+        status: insertIdea.status || "New"
+      })
+      .returning();
     return idea;
   }
 
   async updateIdea(id: number, updateData: Partial<InsertIdea>): Promise<Idea | undefined> {
-    const idea = this.ideas.get(id);
-    if (!idea) return undefined;
-
-    const updatedIdea: Idea = {
-      ...idea,
-      ...updateData,
-      updatedAt: new Date(),
-    };
-    this.ideas.set(id, updatedIdea);
-    return updatedIdea;
+    const [idea] = await db
+      .update(ideas)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(ideas.id, id))
+      .returning();
+    return idea || undefined;
   }
 
   async deleteIdea(id: number): Promise<boolean> {
-    return this.ideas.delete(id);
+    const result = await db.delete(ideas).where(eq(ideas.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   // Hypotheses
   async getHypothesesByIdeaId(ideaId: number): Promise<Hypothesis[]> {
-    return Array.from(this.hypotheses.values()).filter(h => h.ideaId === ideaId);
+    return await db.select().from(hypotheses).where(eq(hypotheses.ideaId, ideaId));
   }
 
   async createHypothesis(insertHypothesis: InsertHypothesis): Promise<Hypothesis> {
-    const id = this.currentHypothesisId++;
-    const now = new Date();
-    const hypothesis: Hypothesis = { 
-      ...insertHypothesis, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.hypotheses.set(id, hypothesis);
+    const [hypothesis] = await db
+      .insert(hypotheses)
+      .values({
+        ...insertHypothesis,
+        status: insertHypothesis.status || "Unvalidated"
+      })
+      .returning();
     return hypothesis;
   }
 
   async updateHypothesis(id: number, updateData: Partial<InsertHypothesis>): Promise<Hypothesis | undefined> {
-    const hypothesis = this.hypotheses.get(id);
-    if (!hypothesis) return undefined;
-
-    const updatedHypothesis: Hypothesis = {
-      ...hypothesis,
-      ...updateData,
-      updatedAt: new Date(),
-    };
-    this.hypotheses.set(id, updatedHypothesis);
-    return updatedHypothesis;
+    const [hypothesis] = await db
+      .update(hypotheses)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(hypotheses.id, id))
+      .returning();
+    return hypothesis || undefined;
   }
 
   async deleteHypothesis(id: number): Promise<boolean> {
-    return this.hypotheses.delete(id);
+    const result = await db.delete(hypotheses).where(eq(hypotheses.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   // Insights
   async getInsightsByIdeaId(ideaId: number): Promise<(Insight & { createdByUser?: User })[]> {
-    const insights = Array.from(this.insights.values()).filter(i => i.ideaId === ideaId);
-    return insights.map(insight => ({
-      ...insight,
-      createdByUser: insight.createdBy ? this.users.get(insight.createdBy) : undefined,
+    const result = await db
+      .select({
+        insight: insights,
+        createdByUser: users,
+      })
+      .from(insights)
+      .leftJoin(users, eq(insights.createdBy, users.id))
+      .where(eq(insights.ideaId, ideaId));
+
+    return result.map(row => ({
+      ...row.insight,
+      createdByUser: row.createdByUser || undefined,
     }));
   }
 
   async createInsight(insertInsight: InsertInsight): Promise<Insight> {
-    const id = this.currentInsightId++;
-    const insight: Insight = { 
-      ...insertInsight, 
-      id, 
-      createdAt: new Date() 
-    };
-    this.insights.set(id, insight);
+    const [insight] = await db
+      .insert(insights)
+      .values(insertInsight)
+      .returning();
     return insight;
   }
 
   async deleteInsight(id: number): Promise<boolean> {
-    return this.insights.delete(id);
+    const result = await db.delete(insights).where(eq(insights.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   // Comments
   async getCommentsByIdeaId(ideaId: number): Promise<(Comment & { user?: User })[]> {
-    const comments = Array.from(this.comments.values()).filter(c => c.ideaId === ideaId);
-    return comments.map(comment => ({
-      ...comment,
-      user: comment.userId ? this.users.get(comment.userId) : undefined,
+    const result = await db
+      .select({
+        comment: comments,
+        user: users,
+      })
+      .from(comments)
+      .leftJoin(users, eq(comments.userId, users.id))
+      .where(eq(comments.ideaId, ideaId));
+
+    return result.map(row => ({
+      ...row.comment,
+      user: row.user || undefined,
     }));
   }
 
   async createComment(insertComment: InsertComment): Promise<Comment> {
-    const id = this.currentCommentId++;
-    const now = new Date();
-    const comment: Comment = { 
-      ...insertComment, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
-    };
-    this.comments.set(id, comment);
+    const [comment] = await db
+      .insert(comments)
+      .values(insertComment)
+      .returning();
     return comment;
   }
 
   async updateComment(id: number, updateData: Partial<InsertComment>): Promise<Comment | undefined> {
-    const comment = this.comments.get(id);
-    if (!comment) return undefined;
-
-    const updatedComment: Comment = {
-      ...comment,
-      ...updateData,
-      updatedAt: new Date(),
-    };
-    this.comments.set(id, updatedComment);
-    return updatedComment;
+    const [comment] = await db
+      .update(comments)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(comments.id, id))
+      .returning();
+    return comment || undefined;
   }
 
   async deleteComment(id: number): Promise<boolean> {
-    return this.comments.delete(id);
+    const result = await db.delete(comments).where(eq(comments.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   // Activities
   async getActivitiesByIdeaId(ideaId: number): Promise<(Activity & { user?: User })[]> {
-    const activities = Array.from(this.activities.values()).filter(a => a.ideaId === ideaId);
-    return activities.map(activity => ({
-      ...activity,
-      user: activity.userId ? this.users.get(activity.userId) : undefined,
+    const result = await db
+      .select({
+        activity: activities,
+        user: users,
+      })
+      .from(activities)
+      .leftJoin(users, eq(activities.userId, users.id))
+      .where(eq(activities.ideaId, ideaId));
+
+    return result.map(row => ({
+      ...row.activity,
+      user: row.user || undefined,
     }));
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const id = this.currentActivityId++;
-    const activity: Activity = { 
-      ...insertActivity, 
-      id, 
-      createdAt: new Date() 
-    };
-    this.activities.set(id, activity);
+    const [activity] = await db
+      .insert(activities)
+      .values(insertActivity)
+      .returning();
     return activity;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
