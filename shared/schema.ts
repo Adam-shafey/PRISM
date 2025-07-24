@@ -32,6 +32,7 @@ export const ideas = pgTable("ideas", {
   effortScore: integer("effort_score"),
   confidenceScore: integer("confidence_score"),
   riceScore: integer("rice_score"),
+  reachEstimate: integer("reach_estimate"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

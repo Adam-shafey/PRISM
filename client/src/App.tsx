@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from "@/pages/dashboard";
 import IdeaDetail from "@/pages/idea-detail";
+import Prioritization from "@/pages/prioritization";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/ideas/:id" component={IdeaDetail} />
+      <Route path="/prioritization" component={Prioritization} />
       <Route component={NotFound} />
     </Switch>
   );
