@@ -1,0 +1,212 @@
+Product Requirements Document: PRISM Product Discovery App
+Version: 1.1
+Date: July 24, 2025
+Author: Gemini
+
+1. Introduction / Executive Summary
+This document outlines the requirements for the PRISM Product Discovery App, a new module within the broader PRISM platform. PRISM is designed to be a comprehensive platform for product discovery, planning, and monitoring/analytics. This initial app will focus specifically on the product discovery phase, providing product teams with tools to systematically capture, validate, analyze, and prioritize new product ideas and opportunities.
+
+The PRISM Product Discovery App aims to centralize insights from various sources, facilitate structured problem validation, and enable intelligent analysis and data-driven decision-making early in the product lifecycle through the strategic application of AI. It will serve as the foundational layer for identifying high-potential initiatives that can then flow into the planning and monitoring modules of the PRISM platform.
+
+2. Goals
+2.1. Primary Goal
+To provide product teams with a centralized, structured, and data-informed environment for capturing, validating, and prioritizing product ideas and problems.
+
+2.2. Secondary Goals
+Streamline Idea Capture: Offer intuitive ways for users to submit, enrich, and categorize new product ideas or identified problems.
+
+Facilitate Problem Validation: Enable teams to systematically validate identified problems through user research, data analysis, and market insights.
+
+Centralize Insights: Aggregate qualitative and quantitative data from various sources (user interviews, surveys, analytics, competitive analysis) to support discovery.
+
+Improve Prioritization: Provide tools and frameworks to help teams objectively assess and prioritize opportunities based on validated problems and potential impact.
+
+Enhance Collaboration: Foster cross-functional collaboration during the discovery process.
+
+Leverage AI for Intelligent Analysis: Automate aspects of data processing, summarization, and suggestion to accelerate discovery.
+
+Seamless Handoff: Create a clear pathway for validated opportunities to transition into the product planning phase within the PRISM platform.
+
+3. Target Audience
+Product Managers: Primary users for capturing ideas, conducting validation, and prioritizing opportunities.
+
+Product Designers/UX Researchers: Users for contributing user insights, research findings, and validating problem spaces.
+
+Engineers: Users for providing technical feasibility input and understanding problem contexts.
+
+Business Stakeholders/Leadership: Users for reviewing product opportunities, understanding strategic alignment, and providing feedback.
+
+4. User Stories
+4.1. Idea & Problem Capture
+As a Product Manager, I want to quickly capture new product ideas or identified problems, so that no potential opportunity is lost.
+
+As a Product Manager, I want to categorize ideas/problems by theme, product area, or strategic pillar, so that I can easily organize and retrieve them.
+
+As a Product Manager, I want the system to suggest relevant categories or tags for new ideas using AI, so that I can quickly and consistently classify them.
+
+As a Product Manager, I want to add detailed descriptions, initial hypotheses, and relevant context to each idea/problem, so that others can understand its scope and potential.
+
+4.2. Insight Aggregation
+As a Product Manager, I want to link user research notes, survey results, and analytics data to specific ideas/problems, so that all relevant insights are centralized for validation.
+
+As a Product Manager, I want to upload or link competitive analysis documents and market trend reports, so that I can understand the external landscape for an idea.
+
+As a Product Manager, I want the system to automatically summarize key takeaways from linked documents or user feedback using AI, so that I can quickly grasp core insights.
+
+As a Product Manager, I want to add qualitative feedback from customer interviews directly to an idea/problem, so that user voices are directly tied to potential solutions.
+
+4.3. Problem Validation & Analysis
+As a Product Manager, I want to define and track validation hypotheses for each problem/idea, so that I can systematically prove or disprove assumptions.
+
+As a Product Manager, I want to record the results of validation experiments (e.g., A/B tests, prototypes), so that I have clear evidence for decision-making.
+
+As a Product Manager, I want to collaborate with teammates on analyzing insights and validation results, so that we can collectively build a shared understanding.
+
+4.4. Opportunity Prioritization
+As a Product Manager, I want to assign a score or priority level to each validated opportunity (e.g., using RICE, ICE, or custom scoring), so that I can objectively compare and rank them.
+
+As a Product Manager, I want the system to suggest initial prioritization scores (e.g., Impact, Effort, Confidence) based on aggregated data and insights using AI, so that I have a data-informed starting point for evaluation.
+
+As a Product Manager, I want to visualize opportunities in a prioritization matrix (e.g., effort vs. impact), so that I can easily identify high-value initiatives.
+
+As a Product Manager, I want to mark an opportunity as "ready for planning," so that it can seamlessly transition to the PRISM Planning module.
+
+5. Features
+5.1. Idea/Problem Repository
+Idea Card/Entry:
+
+Title (Text Input)
+
+Description (Rich Text Editor): Detailed problem statement, potential solution outline, initial hypothesis.
+
+Category/Tags (Multi-select/Dropdown): Customizable tags (e.g., "Growth," "Retention," "New Market," "UX Improvement").
+
+Status (Dropdown): "New," "In Discovery," "Validated," "Rejected," "Prioritized," "In Planning."
+
+Owner (User Selector)
+
+Creation Date & Last Updated Date
+
+AI-Powered Tagging/Categorization Suggestions: As a user types an idea description, the system will suggest relevant categories or tags based on content analysis (mocked initially).
+
+List View: Filterable and sortable list of all ideas/problems.
+
+Search: Full-text search across all idea content.
+
+5.2. Insight & Evidence Hub
+Linked Resources:
+
+Ability to attach files (e.g., PDFs, images, spreadsheets).
+
+Ability to link external URLs (e.g., Miro boards, Google Docs, analytics dashboards).
+
+Ability to embed rich content (e.g., YouTube videos of user interviews).
+
+Automated Insight Summarization (AI-Powered): For linked documents, research notes, or rich text user feedback, the system will provide an AI-generated summary of key takeaways (mocked initially).
+
+Notes/Comments Section: Collaborative space for team members to add qualitative notes, observations, and discussions related to the idea.
+
+User Feedback Integration (Manual/Future API):
+
+Initial: Manual input of key quotes/themes from user interviews or survey open-ends.
+
+Future: API integration points for direct ingestion from survey tools (e.g., SurveyMonkey, Qualtrics) or user research platforms.
+
+5.3. Validation & Hypothesis Tracking
+Hypothesis Builder:
+
+Define Hypothesis Statement (Text Area): "We believe [X problem] for [Y users] will be solved by [Z solution]."
+
+Define Assumptions (List): Key assumptions underlying the hypothesis.
+
+Define Validation Metrics (List): What data points or observations will prove/disprove the hypothesis.
+
+Define Experiment Type (Dropdown): "User Interview," "Survey," "Prototype Test," "A/B Test," "Data Analysis."
+
+Experiment Results (Rich Text Editor): Record outcomes, learnings, and next steps.
+
+Validation Status (Dropdown): "Unvalidated," "Partially Validated," "Validated," "Invalidated."
+
+5.4. Prioritization Workbench
+Customizable Scoring Fields:
+
+Admin-configurable numeric fields (e.g., "Impact Score," "Effort Score," "Confidence Score").
+
+Ability to define calculation formulas for composite scores (e.g., RICE = Reach * Impact * Confidence / Effort).
+
+AI-Assisted Scoring: The system will suggest initial scores for customizable scoring fields (e.g., Impact, Effort, Confidence) based on the idea's description, linked insights, and validation results (mocked initially).
+
+Prioritization Matrix/Chart:
+
+Visual representation of ideas on a 2x2 or custom matrix (e.g., Impact vs. Effort).
+
+Interactive drag-and-drop functionality for repositioning ideas.
+
+Ranking/Ordering: Ability to manually rank or sort ideas based on calculated scores or strategic importance.
+
+5.5. Collaboration & Workflow
+Commenting & @mentions: Allow team members to comment on ideas, insights, and validation results.
+
+Activity Feed: A chronological log of changes and updates to each idea.
+
+Notifications: Basic in-app notifications for mentions or status changes.
+
+Handoff to Planning: A clear action/button to change an idea's status to "In Planning" and potentially trigger an event for the PRISM Planning module (future integration).
+
+6. Technical Requirements
+6.1. Frontend
+Framework: React
+
+UI Library: Shadcn/UI for consistent components.
+
+State Management: React Query for data fetching/caching, Zustand or React Context for global state.
+
+Styling: Tailwind CSS.
+
+Responsiveness: Fully responsive design for desktop and tablet viewing.
+
+Charting/Visualization: A charting library (e.g., Recharts, Nivo) for prioritization matrices and dashboards.
+
+6.2. Backend
+Runtime: Node.js
+
+API Framework: Express.js (or similar).
+
+Database: PostgreSQL (as per previous discussion, with direct connection via connection string).
+
+Schema for ideas, insights, hypotheses, users, categories, etc.
+
+Dedicated api schema for exposed endpoints.
+
+Endpoints:
+
+GET /api/ideas: Retrieve all ideas.
+
+GET /api/ideas/:id: Retrieve a single idea with all linked data.
+
+POST /api/ideas: Create a new idea.
+
+PUT /api/ideas/:id: Update an idea.
+
+DELETE /api/ideas/:id: Delete an idea.
+
+POST /api/ideas/:id/insights: Add an insight/link to an idea.
+
+POST /api/ideas/:id/hypotheses: Add a hypothesis to an idea.
+
+PUT /api/hypotheses/:id: Update a hypothesis.
+
+GET /api/categories: Retrieve configurable categories.
+
+POST /api/categories: Create a new category.
+
+POST /api/users: (Basic user management for assignment)
+
+POST /api/ai/process-discovery-data: Endpoint to receive data (idea description, linked insights, etc.) and return AI-generated suggestions (e.g., tags, summaries, scores). This will be mocked initially.
+
+File Storage: Cloud storage solution (e.g., AWS S3, Google Cloud Storage) for attached files.
+
+6.3. Authentication & Authorization
+User Authentication: Basic user login/registration.
+
+Role-Based Access Control (RBAC): Define roles (e.g., Admin, Product Manager, Viewer) with different permissions for creating, editing, and viewing ideas/insights.
