@@ -12,7 +12,7 @@ import Insights from "@/pages/insights";
 import Teams from "@/pages/teams";
 import Wiki from "@/pages/wiki";
 import NotFound from "@/pages/not-found";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 
 // Planning pages
 const PlanningDashboard = lazy(() => import("@/pages/planning/index"));
@@ -29,9 +29,21 @@ function Router() {
       <Route path="/insights" component={Insights} />
       <Route path="/teams" component={Teams} />
       <Route path="/wiki" component={Wiki} />
-      <Route path="/planning" component={PlanningDashboard} />
-      <Route path="/planning/roadmap" component={PlanningRoadmap} />
-      <Route path="/planning/stories" component={PlanningStories} />
+      <Route path="/planning">
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <PlanningDashboard />
+        </Suspense>
+      </Route>
+      <Route path="/planning/roadmap">
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <PlanningRoadmap />
+        </Suspense>
+      </Route>
+      <Route path="/planning/stories">
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <PlanningStories />
+        </Suspense>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
