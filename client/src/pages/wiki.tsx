@@ -9,27 +9,28 @@ import {
   Book, 
   Plus, 
   Search, 
-  FileText, 
   Clock,
   User,
   Tag,
   ExternalLink,
-  Edit,
-  Eye,
   MessageSquare,
-  GitBranch
+  GitBranch,
+  Grid3X3,
+  List
 } from "lucide-react";
-import { useFeatures } from "@/lib/features";
+import { useFeatures, useFeature } from "@/lib/features";
+import { FeaturesTable } from "@/components/features/features-table";
+import { FeatureDetailModal } from "@/components/features/feature-detail-modal";
 
 interface Feature {
   id: number;
   title: string;
   slug: string;
-  status: "Draft" | "Active" | "Deprecated" | "Archived";
-  problemStatement?: string;
-  solutionOverview?: string;
+  status: string;
+  problemStatement?: string | null;
+  solutionOverview?: string | null;
   tags: string[];
-  category?: string;
+  category?: string | null;
   createdBy?: { name: string; email: string };
   linkedIdea?: { title: string; id: number };
   createdAt: string;
@@ -40,8 +41,11 @@ interface Feature {
 export default function Wiki() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
 
   const { data: features = [], isLoading } = useFeatures(searchQuery);
+  const { data: featureDetail } = useFeature(selectedFeature?.slug || "");
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -57,6 +61,10 @@ export default function Wiki() {
     if (activeTab === "all") return true;
     return feature.status.toLowerCase() === activeTab;
   });
+
+  const handleFeatureClick = (feature: Feature) => {
+    setSelectedFeature(feature);
+  };
 
   if (isLoading) {
     return (
@@ -80,7 +88,7 @@ export default function Wiki() {
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <Book className="h-5 w-5" />
-                Feature Wiki
+                Features
               </h2>
               <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                 {features.length} Features
@@ -97,6 +105,27 @@ export default function Wiki() {
                   className="pl-10 w-64"
                 />
               </div>
+              
+              {/* View Toggle */}
+              <div className="flex items-center border rounded-lg p-1">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="h-8 w-8 p-0"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+              
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 New Feature
@@ -137,6 +166,11 @@ export default function Wiki() {
                       </Button>
                     )}
                   </div>
+                ) : viewMode === "table" ? (
+                  <FeaturesTable 
+                    features={filteredFeatures} 
+                    onFeatureClick={handleFeatureClick}
+                  />
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {filteredFeatures.map((feature: Feature) => (
@@ -203,18 +237,14 @@ export default function Wiki() {
 
                           {/* Actions */}
                           <div className="flex items-center justify-between pt-2 border-t">
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <Button variant="outline" size="sm">
+                            <Button variant="ghost" size="sm">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleFeatureClick(feature)}
+                            >
                               View Details
                             </Button>
                           </div>
@@ -228,6 +258,13 @@ export default function Wiki() {
           </div>
         </main>
       </div>
+
+      {/* Feature Detail Modal */}
+      <FeatureDetailModal
+        feature={featureDetail || selectedFeature}
+        open={!!selectedFeature}
+        onClose={() => setSelectedFeature(null)}
+      />
     </div>
   );
 }

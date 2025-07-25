@@ -17,7 +17,7 @@ const navigationItems = [
     title: "Discovery",
     items: [
       {
-        title: "Ideas & Problems",
+        title: "Ideas",
         href: "/",
         icon: Lightbulb,
         badge: true,
@@ -38,7 +38,7 @@ const navigationItems = [
         icon: MessageSquare,
       },
       {
-        title: "Feature Wiki",
+        title: "Features",
         href: "/wiki",
         icon: Book,
       },

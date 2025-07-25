@@ -73,6 +73,17 @@ export interface IStorage {
   updateTeamMembership(id: number, membership: Partial<InsertTeamMembership>): Promise<TeamMembership | undefined>;
   deleteTeamMembership(id: number): Promise<boolean>;
   removeUserFromTeam(teamId: number, userId: number): Promise<boolean>;
+
+  // Features
+  getAllFeatures(): Promise<(Feature & { createdBy?: User; linkedIdea?: Idea })[]>;
+  getFeatureBySlug(slug: string): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined>;
+  getFeatureById(id: number): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined>;
+  createFeature(feature: InsertFeature): Promise<Feature>;
+  updateFeature(id: number, feature: Partial<InsertFeature>): Promise<Feature | undefined>;
+  searchFeatures(query: string): Promise<(Feature & { createdBy?: User; linkedIdea?: Idea })[]>;
+  getFeatureVersions(featureId: number): Promise<(FeatureVersion & { changedBy?: User })[]>;
+  createFeatureComment(comment: InsertFeatureComment): Promise<FeatureComment>;
+  getFeatureComments(featureId: number): Promise<(FeatureComment & { user?: User })[]>;
 }
 
 // Database Storage replaces MemStorage for PostgreSQL database integration
@@ -467,7 +478,7 @@ export class DatabaseStorage implements IStorage {
         linkedIdea: true,
       },
       orderBy: (features, { desc }) => [desc(features.updatedAt)],
-    });
+    }) as (Feature & { createdBy?: User; linkedIdea?: Idea })[];
   }
 
   async getFeatureBySlug(slug: string): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined> {
@@ -485,7 +496,7 @@ export class DatabaseStorage implements IStorage {
         },
       },
     });
-    return feature || undefined;
+    return feature as (Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined;
   }
 
   async getFeatureById(id: number): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined> {
@@ -503,7 +514,7 @@ export class DatabaseStorage implements IStorage {
         },
       },
     });
-    return feature || undefined;
+    return feature as (Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined;
   }
 
   async createFeature(feature: InsertFeature): Promise<Feature> {
@@ -563,7 +574,7 @@ export class DatabaseStorage implements IStorage {
         linkedIdea: true,
       },
       orderBy: (features, { desc }) => [desc(features.updatedAt)],
-    });
+    }) as (Feature & { createdBy?: User; linkedIdea?: Idea })[];
   }
 
   async getFeatureVersions(featureId: number): Promise<(FeatureVersion & { changedBy?: User })[]> {

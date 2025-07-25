@@ -118,3 +118,14 @@ The architecture emphasizes type safety, developer experience, and scalable data
 - **Team Management UI**: Built teams page with team cards, member management, and role assignment interfaces
 - **Role Management**: Implemented system roles and custom role creation with granular permissions
 - **Access Control**: Prepared framework for enforcing permissions across all modules (Ideas, Insights, Validation, Prioritization)
+- **UI Improvements**: Converted roles from card grid to professional list view format with table headers and zebra-striped rows
+
+### Feature Wiki Module (July 25, 2025)
+- **Database Schema**: Created comprehensive features, feature_versions, and feature_comments tables with full relations
+- **Feature Management**: Built complete CRUD operations for features with versioning and change tracking
+- **Grid/Table View**: Implemented dual view modes matching Ideas module with professional table layout and inline editing
+- **Detail Modal**: Created comprehensive feature detail modal with tabbed interface (Overview, Details, Versions, Comments)
+- **Comment System**: Added fully functional commenting system with user attribution and timestamps
+- **Search & Filtering**: Implemented search functionality and status-based filtering (All, Active, Draft, Deprecated, Archived)
+- **Version History**: Automatic version tracking with change notes and historical data preservation
+- **API Integration**: Complete RESTful API endpoints for features, versions, and comments with proper validation
