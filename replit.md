@@ -129,3 +129,12 @@ The architecture emphasizes type safety, developer experience, and scalable data
 - **Search & Filtering**: Implemented search functionality and status-based filtering (All, Active, Draft, Deprecated, Archived)
 - **Version History**: Automatic version tracking with change notes and historical data preservation
 - **API Integration**: Complete RESTful API endpoints for features, versions, and comments with proper validation
+- **Modules Integration**: Added support for feature modules (groups of features) with visual distinctions using blue coloring and package icons
+
+### PRISM Product Suite (July 25, 2025)
+- **Product Switcher**: Created dropdown header component for switching between Discovery and Planning products
+- **Permission System**: Extended user schema with separate permission arrays for each product (discoveryPermissions, planningPermissions)
+- **Product Architecture**: Defined product configurations and permission constants for both Discovery and Planning
+- **Planning Product**: Built initial Planning product with Roadmap and Stories modules
+- **Dynamic Navigation**: Sidebar navigation adapts based on current product context with different menu items
+- **Access Control**: Product switcher only shows products the user has permissions to access

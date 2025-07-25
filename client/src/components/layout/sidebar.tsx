@@ -8,11 +8,16 @@ import {
   Users, 
   Settings,
   Zap,
-  Book
+  Book,
+  Map,
+  Calendar,
+  List,
+  Target
 } from "lucide-react";
 import { useIdeas } from "@/lib/api";
+import { ProductSwitcher } from "./product-switcher";
 
-const navigationItems = [
+const discoveryNavigationItems = [
   {
     title: "Discovery",
     items: [
@@ -61,9 +66,67 @@ const navigationItems = [
   },
 ];
 
+const planningNavigationItems = [
+  {
+    title: "Planning",
+    items: [
+      {
+        title: "Roadmap",
+        href: "/planning/roadmap",
+        icon: Map,
+      },
+      {
+        title: "Stories",
+        href: "/planning/stories",
+        icon: Book,
+      },
+      {
+        title: "Tasks", 
+        href: "/planning/tasks",
+        icon: List,
+      },
+      {
+        title: "Sprints",
+        href: "/planning/sprints",
+        icon: Calendar,
+      },
+      {
+        title: "Releases",
+        href: "/planning/releases",
+        icon: Target,
+      },
+    ],
+  },
+  {
+    title: "Workspace",
+    items: [
+      {
+        title: "Teams",
+        href: "/teams",
+        icon: Users,
+      },
+      {
+        title: "Settings",
+        href: "/settings",
+        icon: Settings,
+      },
+    ],
+  },
+];
+
 export function Sidebar() {
   const [location] = useLocation();
   const { data: ideas = [] } = useIdeas();
+  
+  // Mock user permissions - in a real app this would come from auth context
+  const userPermissions = {
+    discoveryPermissions: ['ideas:view', 'ideas:create', 'features:view'],
+    planningPermissions: ['roadmap:view', 'stories:view', 'tasks:view']
+  };
+  
+  // Determine which navigation items to show based on current product
+  const isPlanning = location.startsWith('/planning');
+  const navigationItems = isPlanning ? planningNavigationItems : discoveryNavigationItems;
 
   const activeIdeasCount = ideas.filter((idea) => 
     idea.status === "New" || idea.status === "In Discovery"
@@ -71,18 +134,8 @@ export function Sidebar() {
 
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col h-full">
-      {/* Logo and workspace */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Zap className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-lg">PRISM</h1>
-            <p className="text-xs text-muted-foreground">Product Discovery</p>
-          </div>
-        </div>
-      </div>
+      {/* Product Switcher Header */}
+      <ProductSwitcher userPermissions={userPermissions} />
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-6">

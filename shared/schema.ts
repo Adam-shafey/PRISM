@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("Product Manager"),
   avatar: text("avatar"),
+  discoveryPermissions: text("discovery_permissions").array().default(sql`'{}'`), // Discovery product permissions
+  planningPermissions: text("planning_permissions").array().default(sql`'{}'`), // Planning product permissions
   createdAt: timestamp("created_at").defaultNow(),
 });
 
