@@ -1,0 +1,73 @@
+5.6. Team Management & Role-Based Permissions
+This module provides administrators with the ability to create and manage teams, assign users to these teams, and define granular permissions that control user access and capabilities across the PRISM Product Discovery App's modules. This ensures secure collaboration and appropriate data access for different roles within the product organization.
+
+Team Creation & Management:
+
+Admin Interface: A dedicated section for administrators to create new teams, name them, and manage their members.
+
+User Assignment: Ability to add or remove existing users from specific teams. A user can belong to multiple teams.
+
+Role Definition & Assignment:
+
+Pre-defined Roles: The system will come with a set of pre-defined roles (e.g., Administrator, Product Manager, Contributor, Viewer).
+
+Role Assignment: Administrators can assign a specific role to each user within each team. A user's effective permissions are the sum of permissions from all teams they belong to.
+
+Granular Permissions (Per Module):
+Permissions will be defined at the module level, controlling user actions within:
+
+Ideas & Problems Module:
+
+View Ideas: Ability to see all ideas and their details.
+
+Create Ideas: Ability to add new ideas to the repository.
+
+Edit Ideas: Ability to modify existing idea details (title, description, categories, status).
+
+Delete Ideas: Ability to permanently remove ideas.
+
+Insights Module:
+
+View Insights: Ability to see all linked resources and notes.
+
+Add Insights: Ability to attach files, link URLs, and add notes/comments.
+
+Edit Insights: Ability to modify existing insight details or notes.
+
+Delete Insights: Ability to remove linked resources or notes.
+
+View AI Summaries: Ability to see AI-generated summaries.
+
+Validation Module:
+
+View Hypotheses & Results: Ability to see defined hypotheses, assumptions, metrics, and experiment results.
+
+Define Hypotheses: Ability to create new validation hypotheses for an idea.
+
+Record Experiment Results: Ability to add and edit experiment outcomes.
+
+Update Validation Status: Ability to change an idea's validation status.
+
+Prioritization Module:
+
+View Prioritization: Ability to see prioritization scores, matrices, and rankings.
+
+Assign Scores: Ability to manually input or adjust scores for customizable fields.
+
+View AI-Assisted Scores: Ability to see AI-suggested scores.
+
+Mark for Planning Handoff: Ability to change an idea's status to "In Planning."
+
+Access Control Enforcement: The frontend UI and backend API will strictly enforce these permissions, ensuring users can only perform actions allowed by their assigned roles.
+
+Example Role-Permission Matrix:
+
+Feature/Module	Administrator	Product Manager	Contributor	Viewer
+Team Management	Full Control	-	-	-
+Ideas & Problems	Full Control	Create, Edit, View	Create, Edit, View	View
+Insights	Full Control	Add, Edit, View	Add, Edit, View	View
+Validation	Full Control	Define, Record, View	Record, View	View
+Prioritization	Full Control	Assign Scores, View, Handoff	View AI Scores, View	View
+AI Feature Config (e.g., AI Prompts)	Full Control	-	-	-
+
+Export to Sheets
