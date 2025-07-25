@@ -26,7 +26,7 @@ const discoveryNavigationItems = [
         href: "/",
         icon: Lightbulb,
         badge: true,
-      },
+      } as any,
       {
         title: "Prioritization",
         href: "/prioritization",

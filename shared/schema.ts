@@ -114,8 +114,8 @@ export const teamMemberships = pgTable("team_memberships", {
   uniqueMembership: unique().on(table.teamId, table.userId),
 }));
 
-// Features and Modules
-export const features = pgTable("features", {
+// Features and Modules  
+export const features: any = pgTable("features", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
