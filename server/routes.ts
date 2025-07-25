@@ -2,7 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertIdeaSchema, insertHypothesisSchema, insertInsightSchema, insertCommentSchema, insertCategorySchema } from "@shared/schema";
+import { 
+  insertIdeaSchema, insertHypothesisSchema, insertInsightSchema, 
+  insertCommentSchema, insertCategorySchema, insertTeamSchema,
+  insertRoleSchema, insertTeamMembershipSchema
+} from "@shared/schema";
 import { requireAuth, getCurrentUser } from "./auth";
 import passport from "./auth";
 
@@ -358,6 +362,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(suggestions);
     } catch (error) {
       res.status(500).json({ message: "Failed to process AI suggestions" });
+    }
+  });
+
+  // Teams endpoints
+  app.get("/api/teams", requireAuth, async (req, res) => {
+    try {
+      const teams = await storage.getAllTeams();
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      res.status(500).json({ error: "Failed to fetch teams" });
+    }
+  });
+
+  app.get("/api/teams/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const team = await storage.getTeamById(id);
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      res.json(team);
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      res.status(500).json({ error: "Failed to fetch team" });
+    }
+  });
+
+  app.post("/api/teams", requireAuth, async (req, res) => {
+    try {
+      const teamData = insertTeamSchema.parse(req.body);
+      const team = await storage.createTeam(teamData);
+      res.status(201).json(team);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      res.status(500).json({ error: "Failed to create team" });
+    }
+  });
+
+  // Roles endpoints
+  app.get("/api/roles", requireAuth, async (req, res) => {
+    try {
+      const roles = await storage.getAllRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ error: "Failed to fetch roles" });
+    }
+  });
+
+  app.post("/api/roles", requireAuth, async (req, res) => {
+    try {
+      const roleData = insertRoleSchema.parse(req.body);
+      const role = await storage.createRole(roleData);
+      res.status(201).json(role);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ error: "Failed to create role" });
+    }
+  });
+
+  // Team Memberships endpoints
+  app.post("/api/team-memberships", requireAuth, async (req, res) => {
+    try {
+      const membershipData = insertTeamMembershipSchema.parse(req.body);
+      const membership = await storage.createTeamMembership(membershipData);
+      res.status(201).json(membership);
+    } catch (error) {
+      console.error("Error creating team membership:", error);
+      res.status(500).json({ error: "Failed to add member to team" });
+    }
+  });
+
+  app.delete("/api/team-memberships/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteTeamMembership(id);
+      if (!success) {
+        return res.status(404).json({ error: "Team membership not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing team member:", error);
+      res.status(500).json({ error: "Failed to remove team member" });
     }
   });
 

@@ -9,6 +9,7 @@ import IdeaDetail from "@/pages/idea-detail";
 import Prioritization from "@/pages/prioritization";
 import Validation from "@/pages/validation";
 import Insights from "@/pages/insights";
+import Teams from "@/pages/teams";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/prioritization" component={Prioritization} />
       <Route path="/validation" component={Validation} />
       <Route path="/insights" component={Insights} />
+      <Route path="/teams" component={Teams} />
       <Route component={NotFound} />
     </Switch>
   );

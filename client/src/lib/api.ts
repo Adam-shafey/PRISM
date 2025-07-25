@@ -201,3 +201,64 @@ export function useAISuggestions() {
     },
   });
 }
+
+// Teams API hooks
+export function useTeams() {
+  return useQuery<any[]>({
+    queryKey: ["/api/teams"],
+  });
+}
+
+export function useTeam(id: number) {
+  return useQuery<any>({
+    queryKey: ["/api/teams", id],
+  });
+}
+
+export function useCreateTeam() {
+  return useMutation({
+    mutationFn: (team: any) => 
+      apiRequest("POST", "/api/teams", team),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+    },
+  });
+}
+
+// Roles API hooks
+export function useRoles() {
+  return useQuery<any[]>({
+    queryKey: ["/api/roles"],
+  });
+}
+
+export function useCreateRole() {
+  return useMutation({
+    mutationFn: (role: any) => 
+      apiRequest("POST", "/api/roles", role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
+    },
+  });
+}
+
+// Team Memberships API hooks
+export function useCreateTeamMembership() {
+  return useMutation({
+    mutationFn: (membership: any) => 
+      apiRequest("POST", "/api/team-memberships", membership),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+    },
+  });
+}
+
+export function useRemoveTeamMembership() {
+  return useMutation({
+    mutationFn: (membershipId: number) => 
+      apiRequest("DELETE", `/api/team-memberships/${membershipId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+    },
+  });
+}

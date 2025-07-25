@@ -1,9 +1,11 @@
 import { 
   users, ideas, categories, hypotheses, insights, comments, activities,
+  teams, roles, teamMemberships,
   type User, type InsertUser, type Idea, type InsertIdea, 
   type Category, type InsertCategory, type Hypothesis, type InsertHypothesis,
   type Insight, type InsertInsight, type Comment, type InsertComment,
-  type Activity, type InsertActivity
+  type Activity, type InsertActivity, type Team, type InsertTeam,
+  type Role, type InsertRole, type TeamMembership, type InsertTeamMembership
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -47,6 +49,28 @@ export interface IStorage {
   // Activities
   getActivitiesByIdeaId(ideaId: number): Promise<(Activity & { user?: User })[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+
+  // Teams
+  getAllTeams(): Promise<(Team & { createdBy?: User; memberships?: (TeamMembership & { user?: User; role?: Role })[] })[]>;
+  getTeamById(id: number): Promise<(Team & { createdBy?: User; memberships?: (TeamMembership & { user?: User; role?: Role })[] }) | undefined>;
+  createTeam(team: InsertTeam): Promise<Team>;
+  updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team | undefined>;
+  deleteTeam(id: number): Promise<boolean>;
+
+  // Roles
+  getAllRoles(): Promise<Role[]>;
+  getRoleById(id: number): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, role: Partial<InsertRole>): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<boolean>;
+
+  // Team Memberships
+  getTeamMembershipsByTeamId(teamId: number): Promise<(TeamMembership & { user?: User; role?: Role })[]>;
+  getUserTeamMemberships(userId: number): Promise<(TeamMembership & { team?: Team; role?: Role })[]>;
+  createTeamMembership(membership: InsertTeamMembership): Promise<TeamMembership>;
+  updateTeamMembership(id: number, membership: Partial<InsertTeamMembership>): Promise<TeamMembership | undefined>;
+  deleteTeamMembership(id: number): Promise<boolean>;
+  removeUserFromTeam(teamId: number, userId: number): Promise<boolean>;
 }
 
 // Database Storage replaces MemStorage for PostgreSQL database integration
@@ -294,6 +318,143 @@ export class DatabaseStorage implements IStorage {
       .values(insertActivity)
       .returning();
     return activity;
+  }
+
+  // Teams
+  async getAllTeams(): Promise<(Team & { createdBy?: User; memberships?: (TeamMembership & { user?: User; role?: Role })[] })[]> {
+    return await db.query.teams.findMany({
+      with: {
+        createdBy: true,
+        memberships: {
+          with: {
+            user: true,
+            role: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getTeamById(id: number): Promise<(Team & { createdBy?: User; memberships?: (TeamMembership & { user?: User; role?: Role })[] }) | undefined> {
+    const team = await db.query.teams.findFirst({
+      where: eq(teams.id, id),
+      with: {
+        createdBy: true,
+        memberships: {
+          with: {
+            user: true,
+            role: true,
+          },
+        },
+      },
+    });
+    return team || undefined;
+  }
+
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const [newTeam] = await db
+      .insert(teams)
+      .values(team)
+      .returning();
+    return newTeam;
+  }
+
+  async updateTeam(id: number, team: Partial<InsertTeam>): Promise<Team | undefined> {
+    const [updatedTeam] = await db
+      .update(teams)
+      .set(team)
+      .where(eq(teams.id, id))
+      .returning();
+    return updatedTeam || undefined;
+  }
+
+  async deleteTeam(id: number): Promise<boolean> {
+    const result = await db.delete(teams).where(eq(teams.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Roles
+  async getAllRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
+  }
+
+  async getRoleById(id: number): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role || undefined;
+  }
+
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db
+      .insert(roles)
+      .values(role)
+      .returning();
+    return newRole;
+  }
+
+  async updateRole(id: number, role: Partial<InsertRole>): Promise<Role | undefined> {
+    const [updatedRole] = await db
+      .update(roles)
+      .set(role)
+      .where(eq(roles.id, id))
+      .returning();
+    return updatedRole || undefined;
+  }
+
+  async deleteRole(id: number): Promise<boolean> {
+    const result = await db.delete(roles).where(eq(roles.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Team Memberships
+  async getTeamMembershipsByTeamId(teamId: number): Promise<(TeamMembership & { user?: User; role?: Role })[]> {
+    return await db.query.teamMemberships.findMany({
+      where: eq(teamMemberships.teamId, teamId),
+      with: {
+        user: true,
+        role: true,
+      },
+    });
+  }
+
+  async getUserTeamMemberships(userId: number): Promise<(TeamMembership & { team?: Team; role?: Role })[]> {
+    return await db.query.teamMemberships.findMany({
+      where: eq(teamMemberships.userId, userId),
+      with: {
+        team: true,
+        role: true,
+      },
+    });
+  }
+
+  async createTeamMembership(membership: InsertTeamMembership): Promise<TeamMembership> {
+    const [newMembership] = await db
+      .insert(teamMemberships)
+      .values(membership)
+      .returning();
+    return newMembership;
+  }
+
+  async updateTeamMembership(id: number, membership: Partial<InsertTeamMembership>): Promise<TeamMembership | undefined> {
+    const [updatedMembership] = await db
+      .update(teamMemberships)
+      .set(membership)
+      .where(eq(teamMemberships.id, id))
+      .returning();
+    return updatedMembership || undefined;
+  }
+
+  async deleteTeamMembership(id: number): Promise<boolean> {
+    const result = await db.delete(teamMemberships).where(eq(teamMemberships.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async removeUserFromTeam(teamId: number, userId: number): Promise<boolean> {
+    const result = await db
+      .delete(teamMemberships)
+      .where(
+        sql`${teamMemberships.teamId} = ${teamId} AND ${teamMemberships.userId} = ${userId}`
+      );
+    return (result.rowCount || 0) > 0;
   }
 }
 
