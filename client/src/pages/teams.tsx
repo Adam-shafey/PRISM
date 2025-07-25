@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { useTeams, useRoles, useUsers } from "@/lib/api";
 import { TeamCard } from "@/components/teams/team-card";
-import { RoleCard } from "@/components/teams/role-card";
 import { NewTeamModal } from "@/components/teams/new-team-modal";
 import { NewRoleModal } from "@/components/teams/new-role-modal";
 import { ManageMembersModal } from "@/components/teams/manage-members-modal";
@@ -134,14 +133,53 @@ export default function Teams() {
                     <h3 className="text-lg font-medium">System Roles</h3>
                     <Badge variant="outline">Pre-defined</Badge>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {systemRoles.map((role) => (
-                      <RoleCard
-                        key={role.id}
-                        role={role}
-                        isSystem={true}
-                      />
-                    ))}
+                  <div className="bg-card rounded-lg border">
+                    <div className="overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-muted/50">
+                          <tr className="border-b">
+                            <th className="text-left p-4 font-medium">Role</th>
+                            <th className="text-left p-4 font-medium">Description</th>
+                            <th className="text-left p-4 font-medium">Permissions</th>
+                            <th className="text-right p-4 font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {systemRoles.map((role, index) => (
+                            <tr key={role.id} className={`border-b last:border-b-0 hover:bg-muted/20 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <Crown className="h-4 w-4 text-yellow-600" />
+                                  <span className="font-medium">{role.name}</span>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <span className="text-muted-foreground">{role.description}</span>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex flex-wrap gap-1 max-w-xs">
+                                  {role.permissions.slice(0, 3).map((permission: string) => (
+                                    <Badge key={permission} variant="outline" className="text-xs">
+                                      {permission.split(':')[0]}
+                                    </Badge>
+                                  ))}
+                                  {role.permissions.length > 3 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{role.permissions.length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-right">
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
 
@@ -168,14 +206,61 @@ export default function Teams() {
                       </CardContent>
                     </Card>
                   ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {customRoles.map((role) => (
-                        <RoleCard
-                          key={role.id}
-                          role={role}
-                          isSystem={false}
-                        />
-                      ))}
+                    <div className="bg-card rounded-lg border">
+                      <div className="overflow-hidden">
+                        <table className="w-full">
+                          <thead className="bg-muted/50">
+                            <tr className="border-b">
+                              <th className="text-left p-4 font-medium">Role</th>
+                              <th className="text-left p-4 font-medium">Description</th>
+                              <th className="text-left p-4 font-medium">Permissions</th>
+                              <th className="text-right p-4 font-medium">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {customRoles.map((role, index) => (
+                              <tr key={role.id} className={`border-b last:border-b-0 hover:bg-muted/20 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                                <td className="p-4">
+                                  <div className="flex items-center gap-2">
+                                    <Settings className="h-4 w-4 text-blue-600" />
+                                    <span className="font-medium">{role.name}</span>
+                                  </div>
+                                </td>
+                                <td className="p-4">
+                                  <span className="text-muted-foreground">{role.description}</span>
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex flex-wrap gap-1 max-w-xs">
+                                    {role.permissions.slice(0, 3).map((permission: string) => (
+                                      <Badge key={permission} variant="outline" className="text-xs">
+                                        {permission.split(':')[0]}
+                                      </Badge>
+                                    ))}
+                                    {role.permissions.length > 3 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{role.permissions.length - 3} more
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="p-4 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <Button variant="ghost" size="sm">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm">
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
