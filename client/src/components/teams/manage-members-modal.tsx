@@ -47,7 +47,7 @@ export function ManageMembersModal({
   const removeMembershipMutation = useRemoveTeamMembership();
 
   const currentMembers = team?.memberships || [];
-  const memberUserIds = new Set(currentMembers.map(m => m.userId));
+  const memberUserIds = new Set(currentMembers.map((m: any) => m.userId));
   const availableUsers = users.filter(user => !memberUserIds.has(user.id));
 
   const getRoleIcon = (roleName: string) => {
@@ -143,7 +143,7 @@ export function ManageMembersModal({
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={user.avatar} />
                             <AvatarFallback className="text-xs">
-                              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           {user.name}
@@ -192,13 +192,13 @@ export function ManageMembersModal({
               <p className="text-muted-foreground text-sm">No members in this team yet.</p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {currentMembers.map((membership) => (
+                {currentMembers.map((membership: any) => (
                   <div key={membership.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={membership.user?.avatar} />
                         <AvatarFallback className="text-xs">
-                          {membership.user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
+                          {membership.user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || '?'}
                         </AvatarFallback>
                       </Avatar>
                       <div>

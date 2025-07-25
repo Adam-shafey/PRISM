@@ -216,6 +216,8 @@ export function useTeam(id: number) {
 }
 
 export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: (team: any) => 
       apiRequest("POST", "/api/teams", team),
@@ -233,6 +235,8 @@ export function useRoles() {
 }
 
 export function useCreateRole() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: (role: any) => 
       apiRequest("POST", "/api/roles", role),
@@ -244,6 +248,8 @@ export function useCreateRole() {
 
 // Team Memberships API hooks
 export function useCreateTeamMembership() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: (membership: any) => 
       apiRequest("POST", "/api/team-memberships", membership),
@@ -254,6 +260,8 @@ export function useCreateTeamMembership() {
 }
 
 export function useRemoveTeamMembership() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: (membershipId: number) => 
       apiRequest("DELETE", `/api/team-memberships/${membershipId}`),
