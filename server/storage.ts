@@ -1,14 +1,16 @@
 import { 
   users, ideas, categories, hypotheses, insights, comments, activities,
-  teams, roles, teamMemberships,
+  teams, roles, teamMemberships, features, featureVersions, featureComments,
   type User, type InsertUser, type Idea, type InsertIdea, 
   type Category, type InsertCategory, type Hypothesis, type InsertHypothesis,
   type Insight, type InsertInsight, type Comment, type InsertComment,
   type Activity, type InsertActivity, type Team, type InsertTeam,
-  type Role, type InsertRole, type TeamMembership, type InsertTeamMembership
+  type Role, type InsertRole, type TeamMembership, type InsertTeamMembership,
+  type Feature, type InsertFeature, type FeatureVersion, type InsertFeatureVersion,
+  type FeatureComment, type InsertFeatureComment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, or, ilike } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -455,6 +457,142 @@ export class DatabaseStorage implements IStorage {
         sql`${teamMemberships.teamId} = ${teamId} AND ${teamMemberships.userId} = ${userId}`
       );
     return (result.rowCount || 0) > 0;
+  }
+
+  // Features (Wiki)
+  async getAllFeatures(): Promise<(Feature & { createdBy?: User; linkedIdea?: Idea })[]> {
+    return await db.query.features.findMany({
+      with: {
+        createdBy: true,
+        linkedIdea: true,
+      },
+      orderBy: (features, { desc }) => [desc(features.updatedAt)],
+    });
+  }
+
+  async getFeatureBySlug(slug: string): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined> {
+    const feature = await db.query.features.findFirst({
+      where: eq(features.slug, slug),
+      with: {
+        createdBy: true,
+        updatedBy: true,
+        linkedIdea: true,
+        comments: {
+          with: {
+            user: true,
+          },
+          orderBy: (comments, { desc }) => [desc(comments.createdAt)],
+        },
+      },
+    });
+    return feature || undefined;
+  }
+
+  async getFeatureById(id: number): Promise<(Feature & { createdBy?: User; updatedBy?: User; linkedIdea?: Idea; comments?: (FeatureComment & { user?: User })[] }) | undefined> {
+    const feature = await db.query.features.findFirst({
+      where: eq(features.id, id),
+      with: {
+        createdBy: true,
+        updatedBy: true,
+        linkedIdea: true,
+        comments: {
+          with: {
+            user: true,
+          },
+          orderBy: (comments, { desc }) => [desc(comments.createdAt)],
+        },
+      },
+    });
+    return feature || undefined;
+  }
+
+  async createFeature(feature: InsertFeature): Promise<Feature> {
+    const [newFeature] = await db
+      .insert(features)
+      .values(feature)
+      .returning();
+    return newFeature;
+  }
+
+  async updateFeature(id: number, feature: Partial<InsertFeature>): Promise<Feature | undefined> {
+    // Save current version to history before updating
+    const currentFeature = await this.getFeatureById(id);
+    if (currentFeature) {
+      await db.insert(featureVersions).values({
+        featureId: id,
+        version: currentFeature.version,
+        title: currentFeature.title,
+        status: currentFeature.status,
+        problemStatement: currentFeature.problemStatement,
+        solutionOverview: currentFeature.solutionOverview,
+        userStories: currentFeature.userStories,
+        technicalConsiderations: currentFeature.technicalConsiderations,
+        designLinks: currentFeature.designLinks,
+        keyMetrics: currentFeature.keyMetrics,
+        releaseNotes: currentFeature.releaseNotes,
+        learnings: currentFeature.learnings,
+        tags: currentFeature.tags,
+        category: currentFeature.category,
+        changedBy: feature.updatedBy || currentFeature.createdBy,
+        changeNotes: "Automatic version save",
+      });
+    }
+
+    const [updatedFeature] = await db
+      .update(features)
+      .set({
+        ...feature,
+        version: sql`${features.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(features.id, id))
+      .returning();
+    return updatedFeature || undefined;
+  }
+
+  async searchFeatures(query: string): Promise<(Feature & { createdBy?: User; linkedIdea?: Idea })[]> {
+    return await db.query.features.findMany({
+      where: or(
+        ilike(features.title, `%${query}%`),
+        ilike(features.problemStatement, `%${query}%`),
+        ilike(features.solutionOverview, `%${query}%`),
+        sql`${features.tags} @> ARRAY[${query}]::text[]`
+      ),
+      with: {
+        createdBy: true,
+        linkedIdea: true,
+      },
+      orderBy: (features, { desc }) => [desc(features.updatedAt)],
+    });
+  }
+
+  async getFeatureVersions(featureId: number): Promise<(FeatureVersion & { changedBy?: User })[]> {
+    return await db.query.featureVersions.findMany({
+      where: eq(featureVersions.featureId, featureId),
+      with: {
+        changedBy: true,
+      },
+      orderBy: (versions, { desc }) => [desc(versions.version)],
+    });
+  }
+
+  // Feature Comments
+  async createFeatureComment(comment: InsertFeatureComment): Promise<FeatureComment> {
+    const [newComment] = await db
+      .insert(featureComments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async getFeatureComments(featureId: number): Promise<(FeatureComment & { user?: User })[]> {
+    return await db.query.featureComments.findMany({
+      where: eq(featureComments.featureId, featureId),
+      with: {
+        user: true,
+      },
+      orderBy: (comments, { desc }) => [desc(comments.createdAt)],
+    });
   }
 }
 

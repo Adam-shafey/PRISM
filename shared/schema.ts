@@ -1,5 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, unique } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -112,6 +112,61 @@ export const teamMemberships = pgTable("team_memberships", {
   uniqueMembership: unique().on(table.teamId, table.userId),
 }));
 
+// Feature Wiki
+export const features = pgTable("features", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  status: text("status").notNull().default("Draft"), // Draft, Active, Deprecated, Archived
+  problemStatement: text("problem_statement"),
+  solutionOverview: text("solution_overview"),
+  userStories: text("user_stories"),
+  technicalConsiderations: text("technical_considerations"),
+  designLinks: text("design_links"),
+  keyMetrics: text("key_metrics"),
+  releaseNotes: text("release_notes"),
+  learnings: text("learnings"),
+  tags: text("tags").array().default(sql`'{}'`),
+  category: text("category"),
+  linkedIdeaId: integer("linked_idea_id").references(() => ideas.id),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  version: integer("version").default(1).notNull(),
+});
+
+export const featureVersions = pgTable("feature_versions", {
+  id: serial("id").primaryKey(),
+  featureId: integer("feature_id").references(() => features.id, { onDelete: "cascade" }).notNull(),
+  version: integer("version").notNull(),
+  title: text("title").notNull(),
+  status: text("status").notNull(),
+  problemStatement: text("problem_statement"),
+  solutionOverview: text("solution_overview"),
+  userStories: text("user_stories"),
+  technicalConsiderations: text("technical_considerations"),
+  designLinks: text("design_links"),
+  keyMetrics: text("key_metrics"),
+  releaseNotes: text("release_notes"),
+  learnings: text("learnings"),
+  tags: text("tags").array().default(sql`'{}'`),
+  category: text("category"),
+  changedBy: integer("changed_by").references(() => users.id).notNull(),
+  changeNotes: text("change_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const featureComments = pgTable("feature_comments", {
+  id: serial("id").primaryKey(),
+  featureId: integer("feature_id").references(() => features.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  mentionedUsers: integer("mentioned_users").array().default(sql`'{}'`),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -165,6 +220,24 @@ export const insertTeamMembershipSchema = createInsertSchema(teamMemberships).om
   joinedAt: true,
 });
 
+export const insertFeatureSchema = createInsertSchema(features).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  version: true,
+});
+
+export const insertFeatureVersionSchema = createInsertSchema(featureVersions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFeatureCommentSchema = createInsertSchema(featureComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -195,6 +268,15 @@ export type InsertRole = z.infer<typeof insertRoleSchema>;
 
 export type TeamMembership = typeof teamMemberships.$inferSelect;
 export type InsertTeamMembership = z.infer<typeof insertTeamMembershipSchema>;
+
+export type Feature = typeof features.$inferSelect;
+export type InsertFeature = z.infer<typeof insertFeatureSchema>;
+
+export type FeatureVersion = typeof featureVersions.$inferSelect;
+export type InsertFeatureVersion = z.infer<typeof insertFeatureVersionSchema>;
+
+export type FeatureComment = typeof featureComments.$inferSelect;
+export type InsertFeatureComment = z.infer<typeof insertFeatureCommentSchema>;
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -289,5 +371,44 @@ export const teamMembershipsRelations = relations(teamMemberships, ({ one }) => 
   role: one(roles, {
     fields: [teamMemberships.roleId],
     references: [roles.id],
+  }),
+}));
+
+export const featuresRelations = relations(features, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [features.createdBy],
+    references: [users.id],
+  }),
+  updatedBy: one(users, {
+    fields: [features.updatedBy],
+    references: [users.id],
+  }),
+  linkedIdea: one(ideas, {
+    fields: [features.linkedIdeaId],
+    references: [ideas.id],
+  }),
+  versions: many(featureVersions),
+  comments: many(featureComments),
+}));
+
+export const featureVersionsRelations = relations(featureVersions, ({ one }) => ({
+  feature: one(features, {
+    fields: [featureVersions.featureId],
+    references: [features.id],
+  }),
+  changedBy: one(users, {
+    fields: [featureVersions.changedBy],
+    references: [users.id],
+  }),
+}));
+
+export const featureCommentsRelations = relations(featureComments, ({ one }) => ({
+  feature: one(features, {
+    fields: [featureComments.featureId],
+    references: [features.id],
+  }),
+  user: one(users, {
+    fields: [featureComments.userId],
+    references: [users.id],
   }),
 }));

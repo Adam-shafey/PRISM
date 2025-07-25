@@ -5,7 +5,8 @@ import { z } from "zod";
 import { 
   insertIdeaSchema, insertHypothesisSchema, insertInsightSchema, 
   insertCommentSchema, insertCategorySchema, insertTeamSchema,
-  insertRoleSchema, insertTeamMembershipSchema
+  insertRoleSchema, insertTeamMembershipSchema, insertFeatureSchema,
+  insertFeatureCommentSchema
 } from "@shared/schema";
 import { requireAuth, getCurrentUser } from "./auth";
 import passport from "./auth";
@@ -446,6 +447,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing team member:", error);
       res.status(500).json({ error: "Failed to remove team member" });
+    }
+  });
+
+  // Feature Wiki endpoints
+  app.get("/api/features", requireAuth, async (req, res) => {
+    try {
+      const { search } = req.query;
+      let features;
+      
+      if (search && typeof search === "string") {
+        features = await storage.searchFeatures(search);
+      } else {
+        features = await storage.getAllFeatures();
+      }
+      
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      res.status(500).json({ error: "Failed to fetch features" });
+    }
+  });
+
+  app.get("/api/features/:slug", requireAuth, async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const feature = await storage.getFeatureBySlug(slug);
+      if (!feature) {
+        return res.status(404).json({ error: "Feature not found" });
+      }
+      res.json(feature);
+    } catch (error) {
+      console.error("Error fetching feature:", error);
+      res.status(500).json({ error: "Failed to fetch feature" });
+    }
+  });
+
+  app.post("/api/features", requireAuth, async (req, res) => {
+    try {
+      const featureData = insertFeatureSchema.parse(req.body);
+      
+      // Generate slug from title
+      const slug = featureData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .trim();
+      
+      const feature = await storage.createFeature({
+        ...featureData,
+        slug,
+        createdBy: getCurrentUser(req)?.id || 1, // fallback to first user
+      });
+      
+      res.status(201).json(feature);
+    } catch (error) {
+      console.error("Error creating feature:", error);
+      res.status(500).json({ error: "Failed to create feature" });
+    }
+  });
+
+  app.put("/api/features/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const featureData = insertFeatureSchema.partial().parse(req.body);
+      
+      const feature = await storage.updateFeature(id, {
+        ...featureData,
+        updatedBy: getCurrentUser(req)?.id || 1,
+      });
+      
+      if (!feature) {
+        return res.status(404).json({ error: "Feature not found" });
+      }
+      
+      res.json(feature);
+    } catch (error) {
+      console.error("Error updating feature:", error);
+      res.status(500).json({ error: "Failed to update feature" });
+    }
+  });
+
+  app.get("/api/features/:id/versions", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const versions = await storage.getFeatureVersions(id);
+      res.json(versions);
+    } catch (error) {
+      console.error("Error fetching feature versions:", error);
+      res.status(500).json({ error: "Failed to fetch feature versions" });
+    }
+  });
+
+  app.post("/api/features/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const featureId = parseInt(req.params.id);
+      const commentData = insertFeatureCommentSchema.parse(req.body);
+      
+      const comment = await storage.createFeatureComment({
+        ...commentData,
+        featureId,
+        userId: getCurrentUser(req)?.id || 1,
+      });
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating feature comment:", error);
+      res.status(500).json({ error: "Failed to create feature comment" });
     }
   });
 

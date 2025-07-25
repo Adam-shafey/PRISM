@@ -7,7 +7,8 @@ import {
   MessageSquare, 
   Users, 
   Settings,
-  Zap
+  Zap,
+  Book
 } from "lucide-react";
 import { useIdeas } from "@/lib/api";
 
@@ -36,14 +37,19 @@ const navigationItems = [
         href: "/insights",
         icon: MessageSquare,
       },
+      {
+        title: "Feature Wiki",
+        href: "/wiki",
+        icon: Book,
+      },
     ],
   },
   {
     title: "Workspace",
     items: [
       {
-        title: "Team",
-        href: "/team",
+        title: "Teams",
+        href: "/teams",
         icon: Users,
       },
       {

@@ -10,6 +10,7 @@ import Prioritization from "@/pages/prioritization";
 import Validation from "@/pages/validation";
 import Insights from "@/pages/insights";
 import Teams from "@/pages/teams";
+import Wiki from "@/pages/wiki";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/validation" component={Validation} />
       <Route path="/insights" component={Insights} />
       <Route path="/teams" component={Teams} />
+      <Route path="/wiki" component={Wiki} />
       <Route component={NotFound} />
     </Switch>
   );
