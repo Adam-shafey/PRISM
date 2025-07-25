@@ -76,7 +76,6 @@ export function useCategories() {
   });
 }
 
-// Users API
 export function useUsers() {
   return useQuery<User[]>({
     queryKey: ["/api/users"],

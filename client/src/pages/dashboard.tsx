@@ -3,17 +3,24 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { FilterBar } from "@/components/ideas/filter-bar";
 import { IdeaGrid } from "@/components/ideas/idea-grid";
+import { IdeasTable } from "@/components/ideas/ideas-table";
 import { QuickStats } from "@/components/stats/quick-stats";
 import { NewIdeaModal } from "@/components/ideas/new-idea-modal";
-import { useIdeas } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Grid, List } from "lucide-react";
+import { useIdeas, useCategories, useUsers } from "@/lib/api";
+import { useLocation } from "wouter";
 import type { IdeaFilters } from "@/types";
 
 export default function Dashboard() {
   const [showNewIdeaModal, setShowNewIdeaModal] = useState(false);
   const [filters, setFilters] = useState<IdeaFilters>({});
-  const [view, setView] = useState<"grid" | "list" | "matrix">("grid");
+  const [view, setView] = useState<"grid" | "table">("grid");
+  const [, setLocation] = useLocation();
 
   const { data: ideas = [], isLoading } = useIdeas();
+  const { data: categories = [] } = useCategories();
+  const { data: users = [] } = useUsers();
 
   const filteredIdeas = useMemo(() => {
     return ideas.filter((idea) => {
@@ -52,20 +59,52 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onNewIdea={() => setShowNewIdeaModal(true)} />
         
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <FilterBar
-              filters={filters}
-              onFiltersChange={setFilters}
-              view={view}
-              onViewChange={setView}
-            />
-
-            <IdeaGrid ideas={filteredIdeas} />
-
-            <div className="mt-8">
-              <QuickStats />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <QuickStats ideas={filteredIdeas} />
+            
+            {/* Filter Bar with View Toggle */}
+            <div className="flex items-center justify-between">
+              <FilterBar 
+                filters={filters} 
+                onFiltersChange={setFilters}
+                onNewIdea={() => setShowNewIdeaModal(true)}
+              />
+              
+              <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                <Button
+                  size="sm"
+                  variant={view === "grid" ? "default" : "ghost"}
+                  onClick={() => setView("grid")}
+                  className="h-8 px-3"
+                >
+                  <Grid className="h-4 w-4 mr-1" />
+                  Grid
+                </Button>
+                <Button
+                  size="sm"
+                  variant={view === "table" ? "default" : "ghost"}
+                  onClick={() => setView("table")}
+                  className="h-8 px-3"
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  Table
+                </Button>
+              </div>
             </div>
+            
+            {/* Content based on view */}
+            {view === "grid" ? (
+              <IdeaGrid ideas={filteredIdeas} />
+            ) : (
+              <IdeasTable 
+                ideas={filteredIdeas}
+                categories={categories}
+                users={users}
+                onIdeaClick={(idea) => setLocation(`/ideas/${idea.id}`)}
+              />
+            )}
           </div>
         </main>
       </div>
