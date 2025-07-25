@@ -33,7 +33,10 @@ export function ProductSwitcher({ userPermissions }: ProductSwitcherProps) {
     return (
       <div className="flex items-center gap-2 px-6 py-4 border-b">
         <Lightbulb className="h-6 w-6 text-primary" />
-        <span className="text-lg font-semibold">PRISM</span>
+        <div className="flex flex-col">
+          <span className="text-lg font-semibold">PRISM</span>
+          <span className="text-xs text-muted-foreground">Product Discovery</span>
+        </div>
       </div>
     );
   }
@@ -47,8 +50,8 @@ export function ProductSwitcher({ userPermissions }: ProductSwitcherProps) {
           <Map className="h-6 w-6 text-primary" />
         )}
         <div className="flex flex-col">
-          <span className="text-lg font-semibold">{currentConfig.name}</span>
-          <span className="text-xs text-muted-foreground">{currentConfig.description}</span>
+          <span className="text-lg font-semibold">PRISM</span>
+          <span className="text-xs text-muted-foreground">{currentConfig.shortName}</span>
         </div>
       </div>
     );
@@ -74,8 +77,8 @@ export function ProductSwitcher({ userPermissions }: ProductSwitcherProps) {
                 <Map className="h-6 w-6 text-primary" />
               )}
               <div className="flex flex-col items-start">
-                <span className="text-lg font-semibold">{currentConfig.name}</span>
-                <span className="text-xs text-muted-foreground">{currentConfig.description}</span>
+                <span className="text-lg font-semibold">PRISM</span>
+                <span className="text-xs text-muted-foreground">{currentConfig.shortName}</span>
               </div>
             </div>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
