@@ -16,7 +16,9 @@ import {
   ExternalLink,
   GitBranch,
   User,
-  Calendar
+  Calendar,
+  Package,
+  Component
 } from "lucide-react";
 import { useUpdateFeature } from "@/lib/features";
 import type { Feature } from "@shared/schema";
@@ -132,11 +134,23 @@ export function FeaturesTable({ features, onFeatureClick }: FeaturesTableProps) 
                       className="h-8"
                     />
                   ) : (
-                    <div
-                      className="font-medium cursor-pointer hover:text-primary line-clamp-1"
-                      onClick={() => onFeatureClick(feature)}
-                    >
-                      {feature.title}
+                    <div className="flex items-center gap-2">
+                      {feature.type === "module" ? (
+                        <Package className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                      ) : (
+                        <Component className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                      )}
+                      <div
+                        className="font-medium cursor-pointer hover:text-primary line-clamp-1"
+                        onClick={() => onFeatureClick(feature)}
+                      >
+                        {feature.title}
+                      </div>
+                      {feature.type === "module" && (
+                        <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700">
+                          Module
+                        </Badge>
+                      )}
                     </div>
                   )}
                   {feature.problemStatement && (

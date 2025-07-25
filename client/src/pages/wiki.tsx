@@ -16,7 +16,9 @@ import {
   MessageSquare,
   GitBranch,
   Grid3X3,
-  List
+  List,
+  Package,
+  Component
 } from "lucide-react";
 import { useFeatures, useFeature } from "@/lib/features";
 import { FeaturesTable } from "@/components/features/features-table";
@@ -26,13 +28,16 @@ interface Feature {
   id: number;
   title: string;
   slug: string;
+  type: string; // 'feature' or 'module'
   status: string;
   problemStatement?: string | null;
   solutionOverview?: string | null;
   tags: string[];
   category?: string | null;
+  parentModuleId?: number | null;
   createdBy?: { name: string; email: string };
   linkedIdea?: { title: string; id: number };
+  childFeatures?: Feature[];
   createdAt: string;
   updatedAt: string;
   version: number;
@@ -59,6 +64,8 @@ export default function Wiki() {
 
   const filteredFeatures = features.filter((feature: Feature) => {
     if (activeTab === "all") return true;
+    if (activeTab === "module") return feature.type === "module";
+    if (activeTab === "feature") return feature.type === "feature";
     return feature.status.toLowerCase() === activeTab;
   });
 
@@ -138,8 +145,10 @@ export default function Wiki() {
         <main className="flex-1 overflow-auto">
           <div className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="all">All Features</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-7">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="module">Modules</TabsTrigger>
+                <TabsTrigger value="feature">Features</TabsTrigger>
                 <TabsTrigger value="active">Active</TabsTrigger>
                 <TabsTrigger value="draft">Draft</TabsTrigger>
                 <TabsTrigger value="deprecated">Deprecated</TabsTrigger>
@@ -174,18 +183,39 @@ export default function Wiki() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {filteredFeatures.map((feature: Feature) => (
-                      <Card key={feature.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <Card 
+                        key={feature.id} 
+                        className={`hover:shadow-md transition-shadow cursor-pointer ${
+                          feature.type === "module" 
+                            ? "border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" 
+                            : "border-border"
+                        }`}
+                      >
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
-                            <CardTitle className="text-base line-clamp-2">
-                              {feature.title}
-                            </CardTitle>
-                            <Badge variant={getStatusBadgeVariant(feature.status)}>
-                              {feature.status}
-                            </Badge>
+                            <div className="flex items-start gap-2">
+                              {feature.type === "module" ? (
+                                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                              ) : (
+                                <Component className="h-5 w-5 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" />
+                              )}
+                              <CardTitle className="text-base line-clamp-2">
+                                {feature.title}
+                              </CardTitle>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant={getStatusBadgeVariant(feature.status)}>
+                                {feature.status}
+                              </Badge>
+                              {feature.type === "module" && (
+                                <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700">
+                                  Module
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           {feature.problemStatement && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
+                            <p className="text-sm text-muted-foreground line-clamp-2 ml-7">
                               {feature.problemStatement}
                             </p>
                           )}

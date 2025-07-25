@@ -96,7 +96,7 @@ export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description"),
-  permissions: text("permissions").array().notNull().default('{}'), // Array of permission strings
+  permissions: text("permissions").array().notNull().default(sql`'{}'`), // Array of permission strings
   isSystemRole: boolean("is_system_role").default(false), // Pre-defined roles
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -112,11 +112,12 @@ export const teamMemberships = pgTable("team_memberships", {
   uniqueMembership: unique().on(table.teamId, table.userId),
 }));
 
-// Feature Wiki
+// Features and Modules
 export const features = pgTable("features", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   slug: text("slug").notNull().unique(),
+  type: text("type").notNull().default("feature"), // feature, module
   status: text("status").notNull().default("Draft"), // Draft, Active, Deprecated, Archived
   problemStatement: text("problem_statement"),
   solutionOverview: text("solution_overview"),
@@ -128,6 +129,7 @@ export const features = pgTable("features", {
   learnings: text("learnings"),
   tags: text("tags").array().default(sql`'{}'`),
   category: text("category"),
+  parentModuleId: integer("parent_module_id").references(() => features.id),
   linkedIdeaId: integer("linked_idea_id").references(() => ideas.id),
   createdBy: integer("created_by").references(() => users.id).notNull(),
   updatedBy: integer("updated_by").references(() => users.id),
@@ -387,6 +389,11 @@ export const featuresRelations = relations(features, ({ one, many }) => ({
     fields: [features.linkedIdeaId],
     references: [ideas.id],
   }),
+  parentModule: one(features, {
+    fields: [features.parentModuleId],
+    references: [features.id],
+  }),
+  childFeatures: many(features),
   versions: many(featureVersions),
   comments: many(featureComments),
 }));
